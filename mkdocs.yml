@@ -1,0 +1,11 @@
+site_name: napari-geojson
+site_description: Read and write geojson files in napari
+site_author: Tim Morello
+
+theme: readthedocs
+
+
+repo_url: https://github.com/tdmorello/napari-geojson
+
+pages:
+- Home: index.md
