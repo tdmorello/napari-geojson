@@ -9,6 +9,8 @@
 
 Read and write geojson files in napari
 
+Tested on MacOS and Linux.
+
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
