@@ -34,7 +34,11 @@ def test_reader(tmp_path):
 
     data = layer_data_tuple[0]
     shape_types = layer_data_tuple[1]["shape_type"]
-    shape_type_conversion = {"polygon": Polygon, "path": LineString}
+    shape_type_conversion = {
+        "polygon": Polygon,
+        "rectangle": Polygon,
+        "path": LineString,
+    }
 
     # make sure it's the same as it started
     test_gdf = gpd.GeoDataFrame(
