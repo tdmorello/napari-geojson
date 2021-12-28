@@ -1,14 +1,4 @@
-"""
-This module is an example of a barebones numpy reader plugin for napari.
-
-It implements the ``napari_get_reader`` hook specification, (to create
-a reader plugin) but your plugin may choose to implement any of the hook
-specifications offered by napari.
-see: https://napari.org/docs/dev/plugins/hook_specifications.html
-
-Replace code below accordingly.  For complete documentation see:
-https://napari.org/docs/dev/plugins/for_plugin_developers.html
-"""
+"""Read geojson files into napari."""
 
 from typing import TYPE_CHECKING, List
 
@@ -37,16 +27,11 @@ def napari_get_reader(path):
         same path or list of paths, and returns a list of layer data tuples.
     """
     if isinstance(path, list):
-        # reader plugins may be handed single path, or a list of paths.
-        # if it is a list, it is assumed to be an image stack...
-        # so we are only going to look at the first file.
         path = path[0]
 
-    # if we know we cannot read the file, we immediately return None.
     if not path.lower().endswith((".json", ".geojson")):
         return None
 
-    # otherwise we return the *function* that can read ``path``.
     return reader_function
 
 
@@ -83,15 +68,16 @@ def geojson_to_napari(fname: str) -> "napari.types.LayerDataTuple":
     # consider accepting string input instead of file
     with open(fname, "r") as f:
         collection = geojson.load(f)
+
         if "features" in collection.keys():
             collection = collection["features"]
         elif "geometries" in collection.keys():
             collection = collection["geometries"]
+
         shapes = [get_shape(geom) for geom in collection]
         shape_types = [get_shape_type(geom) for geom in collection]
         meta = {"shape_type": shape_types}
-        print(f"shapes are {shapes}")
-        print(f"metadata is {meta}")
+
     return (shapes, meta, "shapes")
 
 
@@ -112,7 +98,6 @@ def get_coords(geom: Geometry) -> List:
 
 def get_shape_type(geom: Geometry) -> str:
     """Translate geojson to napari shape notation."""
-    print(f"shape is {geom}")
     if geom.type in ["Point", "Polygon"]:
         return "rectangle" if is_rectangle(geom) else "polygon"
     if geom.type == "LineString":
