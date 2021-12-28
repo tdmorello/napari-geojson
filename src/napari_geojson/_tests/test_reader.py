@@ -1,11 +1,12 @@
 """Test plugins."""
 
 import geojson
+
 from napari_geojson import napari_get_reader
 
 
 def test_reader(tmp_path):
-    """An example of how you might test your plugin."""
+    """Reader loads the correct number of shapes."""
     fname = str(tmp_path / "sample.geojson")
 
     with open(fname, "w") as f:

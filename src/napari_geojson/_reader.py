@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, List
 
 import geojson
 import numpy as np
-from geojson.geometry import Geometry, Polygon
+from geojson.geometry import Geometry, LineString, Point, Polygon
 from napari_plugin_engine import napari_hook_implementation
 
 if TYPE_CHECKING:
@@ -77,42 +77,43 @@ def reader_function(path) -> List["napari.types.LayerDataTuple"]:
     return [geojson_to_napari(_path) for _path in paths]
 
 
-# consider accepting string input instead of file
+# TODO if all objects are point, load into points layer
 def geojson_to_napari(fname: str) -> "napari.types.LayerDataTuple":
     """Convert geojson into napari shapes data."""
-    # napari shape types {‘line’, ‘rectangle’, ‘ellipse’, ‘path’, ‘polygon’}
+    # consider accepting string input instead of file
     with open(fname, "r") as f:
-        # load data
         collection = geojson.load(f)
         if "features" in collection.keys():
             collection = collection["features"]
         elif "geometries" in collection.keys():
             collection = collection["geometries"]
-        # collect shape data
-        shapes = [get_coords(geom) for geom in collection]
+        shapes = [get_shape(geom) for geom in collection]
         shape_types = [get_shape_type(geom) for geom in collection]
-        # TODO if all objects are point, load into points layer
         meta = {"shape_type": shape_types}
+        print(f"shapes are {shapes}")
+        print(f"metadata is {meta}")
     return (shapes, meta, "shapes")
 
 
-def get_coords(geom) -> List:
-    """Return coordinates for geojson object."""
+def get_shape(geom: Geometry, convert_point=True) -> List:
+    """Return coordinates of shapes.
+
+    Gives the option to convert points to square polygons.
+    """
+    if convert_point and isinstance(geom, Point):
+        geom = point_to_polygon(geom)
+    return get_coords(geom)
+
+
+def get_coords(geom: Geometry) -> List:
+    """Return coordinates for geojson shapes."""
     return list(geojson.utils.coords(geom))
 
 
-# TODO how to handle points?
 def get_shape_type(geom: Geometry) -> str:
-    """Convert geojson object type to napari shape type.
-
-    :param geom: a geojson geometry
-    :type geom: geojson.geometry.Geometry
-    :return: "point", "rectangle", "polygon", "path", or "line"
-    :rtype: str
-    """
-    if geom.type == "Point":
-        return "point"
-    if geom.type == "Polygon":
+    """Translate geojson to napari shape notation."""
+    print(f"shape is {geom}")
+    if geom.type in ["Point", "Polygon"]:
         return "rectangle" if is_rectangle(geom) else "polygon"
     if geom.type == "LineString":
         return "path" if is_polyline(geom) else "line"
@@ -120,17 +121,27 @@ def get_shape_type(geom: Geometry) -> str:
         raise ValueError(f"No matching napari shape for {geom.type}")
 
 
-def is_rectangle(geometry: Geometry) -> bool:
+def is_rectangle(geom: Geometry) -> bool:
     """Check if a geometry is a rectangle."""
     # TODO fill in
+    if isinstance(geom, Polygon):
+        ...
     return False
 
 
-def is_polyline(geometry: Geometry):
+def is_polyline(geom: Geometry) -> bool:
     """Check if a geometry is a path/polyline."""
-    return (geometry.type == "LineString") and (len(get_coords(geometry)) > 2)
+    return isinstance(geom, LineString) and (len(get_coords(geom)) > 2)
 
 
-def estimate_ellipse(polygon: Polygon) -> np.ndarray:
+def point_to_polygon(point: Point, width=1) -> Polygon:
+    """Convert a point to a 1x1 square polygon."""
+    coords = np.tile(np.array(get_coords(point)), (4, 1))
+    coords[((0, 0, 1, 3), (0, 1, 0, 1))] -= width / 2
+    coords[((1, 2, 2, 3), (1, 0, 1, 0))] += width / 2
+    return Polygon(coords.tolist())
+
+
+def estimate_ellipse(poly: Polygon) -> np.ndarray:
     """Fit an ellipse to the polygon."""
-    ...
+    raise NotImplementedError
