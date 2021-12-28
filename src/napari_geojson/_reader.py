@@ -10,11 +10,15 @@ Replace code below accordingly.  For complete documentation see:
 https://napari.org/docs/dev/plugins/for_plugin_developers.html
 """
 
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List
 
-import geopandas as gpd
+import geojson
 import numpy as np
+from geojson.geometry import Geometry, Polygon
 from napari_plugin_engine import napari_hook_implementation
+
+if TYPE_CHECKING:
+    import napari
 
 
 @napari_hook_implementation
@@ -46,7 +50,7 @@ def napari_get_reader(path):
     return reader_function
 
 
-def reader_function(path):
+def reader_function(path) -> List["napari.types.LayerDataTuple"]:
     """Take a path or list of paths and return a list of LayerData tuples.
 
     Readers are expected to return data as a list of tuples, where each tuple
@@ -70,43 +74,63 @@ def reader_function(path):
     """
     # handle both a string and a list of strings
     paths = [path] if isinstance(path, str) else path
-    # load all files into array
-    gdfs = [gpd.read_file(_path) for _path in paths]
-
-    layer_tuples = []
-    for gdf in gdfs:
-        coords, shape_types = _gdf_to_napari(gdf)
-        add_kwargs = {"shape_type": shape_types}
-        layer_tuples.append((coords, add_kwargs, "shapes"))
-
-    return layer_tuples
+    return [geojson_to_napari(_path) for _path in paths]
 
 
-# napari Shapes supports:
-# ellipses, rectangles, polygons, lines, polylines
+# consider accepting string input instead of file
+def geojson_to_napari(fname: str) -> "napari.types.LayerDataTuple":
+    """Convert geojson into napari shapes data."""
+    # napari shape types {‘line’, ‘rectangle’, ‘ellipse’, ‘path’, ‘polygon’}
+    with open(fname, "r") as f:
+        # load data
+        collection = geojson.load(f)
+        if "features" in collection.keys():
+            collection = collection["features"]
+        elif "geometries" in collection.keys():
+            collection = collection["geometries"]
+        # collect shape data
+        shapes = [get_coords(geom) for geom in collection]
+        shape_types = [get_shape_type(geom) for geom in collection]
+        # TODO if all objects are point, load into points layer
+        meta = {"shape_type": shape_types}
+    return (shapes, meta, "shapes")
 
 
-def _get_coords(shape) -> Tuple[np.ndarray, str]:
-    # if polygon, check if rectangle
-    shape_type_conversion = {"Polygon": "polygon", "LineString": "path"}
-    shape_type = shape_type_conversion[shape.geom_type]
-    try:
-        coords = np.array(shape.boundary.xy).T
-        if np.isclose(shape.minimum_rotated_rectangle.area, shape.area):
-            shape_type = "rectangle"
-    except NotImplementedError:
-        if shape_type == "ellipse":
-            raise NotImplementedError
-        elif shape_type == "line":
-            raise NotImplementedError
-        elif shape_type == "path":
-            coords = np.array(shape.coords)
-
-    return (coords, shape_type)
+def get_coords(geom) -> List:
+    """Return coordinates for geojson object."""
+    return list(geojson.utils.coords(geom))
 
 
-def _gdf_to_napari(gdf) -> Tuple[List[np.ndarray], List[str]]:
-    shapes = gdf.geometry.apply(_get_coords)
-    coords = [coord for coord, _ in shapes]
-    shape_types = [shape_type for _, shape_type in shapes]
-    return coords, shape_types
+# TODO how to handle points?
+def get_shape_type(geom: Geometry) -> str:
+    """Convert geojson object type to napari shape type.
+
+    :param geom: a geojson geometry
+    :type geom: geojson.geometry.Geometry
+    :return: "point", "rectangle", "polygon", "path", or "line"
+    :rtype: str
+    """
+    if geom.type == "Point":
+        return "point"
+    if geom.type == "Polygon":
+        return "rectangle" if is_rectangle(geom) else "polygon"
+    if geom.type == "LineString":
+        return "path" if is_polyline(geom) else "line"
+    else:
+        raise ValueError(f"No matching napari shape for {geom.type}")
+
+
+def is_rectangle(geometry: Geometry) -> bool:
+    """Check if a geometry is a rectangle."""
+    # TODO fill in
+    return False
+
+
+def is_polyline(geometry: Geometry):
+    """Check if a geometry is a path/polyline."""
+    return (geometry.type == "LineString") and (len(get_coords(geometry)) > 2)
+
+
+def estimate_ellipse(polygon: Polygon) -> np.ndarray:
+    """Fit an ellipse to the polygon."""
+    ...
