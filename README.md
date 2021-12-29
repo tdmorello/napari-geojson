@@ -9,6 +9,8 @@
 
 Read and write geojson files in napari.
 
+![Writing shapes to GeoJSON](https://github.com/tdmorello/napari-geojson/blob/main/images/output.gif)
+
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
