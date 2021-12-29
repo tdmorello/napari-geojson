@@ -1,6 +1,6 @@
 """Read geojson files into napari."""
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import geojson
 import numpy as np
@@ -62,8 +62,8 @@ def reader_function(path) -> List["napari.types.LayerDataTuple"]:
     return [geojson_to_napari(_path) for _path in paths]
 
 
-# TODO if all objects are point, load into points layer
-def geojson_to_napari(fname: str) -> "napari.types.LayerDataTuple":
+# TODO if all objects are point, load into points layer?
+def geojson_to_napari(fname: str) -> Tuple[Any, Dict, str]:
     """Convert geojson into napari shapes data."""
     # consider accepting string input instead of file
     with open(fname, "r") as f:
