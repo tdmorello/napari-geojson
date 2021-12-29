@@ -9,7 +9,7 @@
 
 Read and write geojson files in napari.
 
-![Writing shapes to GeoJSON](https://github.com/tdmorello/napari-geojson/blob/main/images/output.gif)
+![](https://github.com/tdmorello/napari-geojson/blob/main/images/output.gif)
 
 ----------------------------------
 
