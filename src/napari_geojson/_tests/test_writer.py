@@ -38,3 +38,26 @@ def test_write_each_shape(make_napari_viewer, tmp_path, coords, shape_type, expe
         collection = geojson.load(fp)
         geom = collection["geometries"][0]
         assert geom.type == expected
+
+
+@pytest.mark.parametrize(
+    "coords,shape_type,expected", [ellipse], ids=["ellipse"]
+)
+def test_writer_raises_error(tmp_path, make_napari_viewer, coords, shape_type, expected):  # noqa E501
+    """Writer raises an error when shapes layer contains ellipses."""
+    fname = str(tmp_path / "sample.geojson")
+    viewer = make_napari_viewer()
+    shapes_layer = viewer.add_shapes(coords, shape_type=shape_type)
+    # shape was written
+    assert len(shapes_layer.data) == 1
+
+    with pytest.raises(NotImplementedError):
+        writer = napari_get_writer(fname, "shapes")
+        data, meta, _ = shapes_layer.as_layer_data_tuple()
+        writer(fname, data, meta)
+
+
+def test_get_writer_pass():
+    """Reader passes on fake file."""
+    reader = napari_get_writer("fake.file", "shapes")
+    assert reader is None

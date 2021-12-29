@@ -8,7 +8,7 @@ from geojson.geometry import Geometry, LineString, Point, Polygon
 from napari_plugin_engine import napari_hook_implementation
 
 if TYPE_CHECKING:
-    import napari
+    import napari  # pragma: no cover
 
 
 @napari_hook_implementation

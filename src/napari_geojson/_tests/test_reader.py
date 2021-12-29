@@ -1,17 +1,24 @@
 """Test plugins."""
 
 import geojson
+import pytest
+from geojson import FeatureCollection, GeometryCollection
 
 from napari_geojson import napari_get_reader
 
 
-def test_reader(tmp_path):
+@pytest.mark.parametrize(
+    "collection_class",
+    [FeatureCollection, GeometryCollection],
+    ids=["features", "geometries"],
+)
+def test_read_collections(tmp_path, collection_class):
     """Reader loads the correct number of shapes."""
     fname = str(tmp_path / "sample.geojson")
 
     with open(fname, "w") as f:
         geojson_types = ["Point", "LineString", "Polygon"]
-        feature_collection = geojson.GeometryCollection(
+        feature_collection = collection_class(
             [geojson.utils.generate_random(_type) for _type in geojson_types]
         )
         geojson.dump(feature_collection, f)

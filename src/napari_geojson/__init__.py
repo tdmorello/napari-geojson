@@ -1,7 +1,7 @@
 """GeoJSON reader and writer packages for napari."""
 try:
     from ._version import version as __version__
-except ImportError:
+except ImportError:  # pragma: no cover
     __version__ = "unknown"
 
 
