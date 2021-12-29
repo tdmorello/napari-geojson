@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/tdmorello/napari-geojson/branch/main/graph/badge.svg)](https://codecov.io/gh/tdmorello/napari-geojson)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-geojson)](https://napari-hub.org/plugins/napari-geojson)
 
-Read geojson files in napari.
+Read and write geojson files in napari.
 
 ----------------------------------
 
