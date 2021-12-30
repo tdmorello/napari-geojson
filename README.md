@@ -9,7 +9,7 @@
 
 Read and write geojson files in napari.
 
-![](https://github.com/tdmorello/napari-geojson/raw/main/images/output.gif)
+![](https://github.com/tdmorello/napari-geojson/raw/main/resources/output.gif)
 
 ----------------------------------
 
