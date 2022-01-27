@@ -1,25 +1,21 @@
 """A module to write geojson files from napari shapes layers."""
 
-from typing import Dict, List, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, List, Sequence, Tuple, Union
 
 import geojson
 from geojson.feature import FeatureCollection
 from geojson.geometry import GeometryCollection, LineString, Polygon
 from napari.layers.shapes._shapes_models import Ellipse
-from napari_plugin_engine import napari_hook_implementation
+
+if TYPE_CHECKING:
+    DataType = Union[Any, Sequence[Any]]
+    FullLayerData = Tuple[DataType, dict, str]
 
 
-@napari_hook_implementation
-def napari_get_writer(path, layer_types):
-    """Return a writer for the given file extension."""
-    if not path.lower().endswith((".json", ".geojson")):
-        return None
-    return napari_write_shapes
-
-
-@napari_hook_implementation
-def napari_write_shapes(path: str, data: List, meta: Dict) -> str:
-    """Write a geojson file from napari shape layer data."""
+def write_shapes(path: str, data: Any, meta: dict) -> str:
+    """Write a single geojson file from napari shape layer data."""
     with open(path, "w") as fp:
         geojson.dump(napari_to_geojson(data, meta), fp)
         return fp.name

@@ -1,0 +1,19 @@
+name: napari-geojson
+schema_version: 0.1.0
+contributions:
+  commands:
+    - id: napari-geojson.get_reader
+      title: Open data with napari-geojson
+      python_name: napari_geojson._reader:napari_get_reader
+    - id: napari-geojson.write_shapes
+      title: Save shapes data with napari-geojson
+      python_name: napari_geojson._writer:write_shapes
+  readers:
+    - command: napari-geojson.get_reader
+      filename_patterns: ["*.geojson"]
+      accepts_directories: true
+  writers:
+    - command: napari-geojson.write_shapes
+      layer_types: ["shapes"]
+      filename_extensions: [".geojson"]
+      display_name: napari geojson

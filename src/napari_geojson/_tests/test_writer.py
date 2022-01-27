@@ -1,7 +1,7 @@
 import geojson
 import pytest
 
-from napari_geojson import napari_get_writer
+from napari_geojson import write_shapes
 
 ellipse = [[[0, 0], [0, 5], [5, 5], [5, 0]], "ellipse", "Polygon"]
 line = [[[0, 0], [5, 5]], "line", "LineString"]
@@ -26,20 +26,11 @@ def test_write_each_shape(
     # shape was written
     assert len(shapes_layer.data) == 1
 
-    writer = napari_get_writer(fname, "shapes")
-    assert callable(writer)
-
     data, meta, _ = shapes_layer.as_layer_data_tuple()
-    writer(fname, data, meta)
+    write_shapes(fname, data, meta)
 
     # read back
-    with open(fname, "r") as fp:
+    with open(fname) as fp:
         collection = geojson.load(fp)
         geom = collection["geometries"][0]
         assert geom.type == expected
-
-
-def test_get_writer_pass():
-    """Reader passes on fake file."""
-    reader = napari_get_writer("fake.file", "shapes")
-    assert reader is None
