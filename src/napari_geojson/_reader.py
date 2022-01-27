@@ -27,7 +27,7 @@ def napari_get_reader(path):
     if isinstance(path, list):
         path = path[0]
 
-    if not path.lower().endswith((".json", ".geojson")):
+    if not path.lower().endswith(".geojson"):
         return None
 
     return reader_function
