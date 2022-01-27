@@ -44,5 +44,6 @@ def get_geometry(coords: List, shape_type: str) -> Union[Polygon, LineString]:
 
 def ellipse_to_polygon(coords: List) -> List:
     """Convert an ellipse to a polygon."""
+    # TODO implement custom function
     # Hacky way to use napari's internal conversion
     return Ellipse(coords)._edge_vertices.tolist()
