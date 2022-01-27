@@ -1,5 +1,6 @@
 """Read geojson files into napari."""
 
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import geojson
@@ -45,7 +46,8 @@ def geojson_to_napari(fname: str) -> Tuple[Any, Dict, str]:
 
         shapes = [get_shape(geom) for geom in collection]
         shape_types = [get_shape_type(geom) for geom in collection]
-        meta = {"shape_type": shape_types}
+        properties = get_properties(collection)
+        meta = {"shape_type": shape_types, "properties": properties}
 
     return (shapes, meta, "shapes")
 
@@ -108,5 +110,26 @@ def estimate_ellipse(poly: Polygon) -> np.ndarray:
     raise NotImplementedError
 
 
-def get_properties() -> dict:
-    ...
+# TODO extract color
+def get_properties(collection) -> dict:
+    """Return properties sorted into a dataframe-like dictionary."""
+    properties = defaultdict(list)
+    for geom in collection:
+        for k, v in geom.properties.items():
+            # handles QuPath measurement storage
+            # TODO move to separate function
+            if k == "measurements":
+                for d in v:
+                    try:
+                        properties[d["name"]].append(d["value"])
+                    except KeyError:
+                        pass
+            else:
+                properties[k].append(v)
+    return properties
+
+
+# https://stackoverflow.com/questions/7822956/how-to-convert-negative-integer-value-to-hex-in-python
+def int_to_hex(val: int, nbits=32):
+    """Convert signed integers to 32 bit hex."""
+    return hex((val + (1 << nbits)) % (1 << nbits))
