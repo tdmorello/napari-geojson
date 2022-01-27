@@ -114,18 +114,22 @@ def estimate_ellipse(poly: Polygon) -> np.ndarray:
 def get_properties(collection) -> dict:
     """Return properties sorted into a dataframe-like dictionary."""
     properties = defaultdict(list)
-    for geom in collection:
-        for k, v in geom.properties.items():
-            # handles QuPath measurement storage
-            # TODO move to separate function
-            if k == "measurements":
-                for d in v:
-                    try:
-                        properties[d["name"]].append(d["value"])
-                    except KeyError:
-                        pass
-            else:
-                properties[k].append(v)
+    try:
+        for geom in collection:
+            for k, v in geom.properties.items():
+                # handles QuPath measurement storage
+                # TODO move to separate function
+                if k == "measurements":
+                    for d in v:
+                        try:
+                            properties[d["name"]].append(d["value"])
+                        except KeyError:
+                            pass
+                else:
+                    properties[k].append(v)
+    except AttributeError:
+        return {}
+
     return properties
 
 
