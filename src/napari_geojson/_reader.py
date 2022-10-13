@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
-from pathlib import Path
 
 import geojson
 import numpy as np
@@ -85,19 +84,17 @@ def geojson_to_napari(fname: str) -> List[Tuple[Any, Dict, str]]:
     return layer_data
 
 
-def get_shape(geom: Geometry, convert_point=True) -> List:
-    """Return coordinates of shapes.
-
-    Gives the option to convert points to square polygons.
-    """
-    # if convert_point and isinstance(geom, Point):
-    #     geom = point_to_polygon(geom)
+def get_shape(geom: Geometry) -> List:
+    """Return coordinates of shapes."""
     return get_coords(geom)
 
 
-def get_coords(geom: Geometry) -> List:
+def get_coords(geom: Geometry, flipxy=True) -> List:
     """Return coordinates for geojson shapes."""
-    return list(geojson.utils.coords(geom))
+    coords = np.array(list(geojson.utils.coords(geom)))
+    if flipxy:
+        coords = np.flip(coords, 1)
+    return coords
 
 
 def create_point_layer_data(collection) -> Tuple[Any, Dict, str]:
@@ -140,15 +137,6 @@ def is_polyline(geom: Geometry) -> bool:
     return len(get_coords(geom)) > 2
 
 
-# alternatively, ignore points and print a message
-def point_to_polygon(point: Point, width=1) -> Polygon:
-    """Convert a point to a 1x1 square polygon."""
-    coords = np.tile(np.array(get_coords(point)), (4, 1))
-    coords[((0, 0, 1, 3), (0, 1, 0, 1))] -= width / 2
-    coords[((1, 2, 2, 3), (1, 0, 1, 0))] += width / 2
-    return Polygon(coords.tolist())
-
-
 def estimate_ellipse(poly: Polygon) -> np.ndarray:
     """Fit an ellipse to the polygon."""
     raise NotImplementedError
@@ -175,9 +163,3 @@ def get_properties(collection) -> dict:
         return {}
 
     return properties
-
-
-# https://stackoverflow.com/questions/7822956/how-to-convert-negative-integer-value-to-hex-in-python
-def int_to_hex(val: int, nbits=32):
-    """Convert signed integers to 32 bit hex."""
-    return hex((val + (1 << nbits)) % (1 << nbits))
