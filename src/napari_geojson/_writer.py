@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Sequence, Tuple, Union
 
 import geojson
-from geojson.geometry import LineString, MultiPoint, Polygon
+from geojson.geometry import Geometry, LineString, MultiPoint, Polygon
 from napari.layers.shapes._shapes_models import Ellipse
 
 if TYPE_CHECKING:
@@ -36,6 +36,18 @@ def write_shapes(path: str, layer_data: List[Tuple[Any, Dict, str]]) -> str:
         return fp.name
 
 
+# TODO make explicit about how to change coordinates... it works for QuPath for now
+def flip_coords(geom: Geometry, flipxy=True) -> List:
+    """Return coordinates for geojson shapes."""
+    if geom["type"] == "Point":
+        geom["coordinates"].reverse()
+        return geom
+    else:
+        for c in geom["coordinates"]:
+            c.reverse()
+    return geom
+
+
 def format_qupath(shape, object_type="annotation", is_locked=False):
     """Convert to QuPath friendly object format."""
     shape = {
@@ -48,15 +60,21 @@ def format_qupath(shape, object_type="annotation", is_locked=False):
     return shape
 
 
-def get_geometry(coords: List, shape_type: str) -> Union[Polygon, LineString]:
+def get_geometry(
+    coords: List, shape_type: str, flipxy=True
+) -> Union[Polygon, LineString]:
     """Get GeoJSON type geometry from napari shape."""
-    if shape_type == "ellipse":
-        return Polygon(ellipse_to_polygon(coords))
     if shape_type in ["rectangle", "polygon"]:
-        return Polygon(coords)
-    if shape_type in ["line", "path"]:
-        return LineString(coords)
-    raise ValueError(f"Shape type `{shape_type}` not supported.")
+        shape = Polygon(coords)
+    elif shape_type in ["line", "path"]:
+        shape = LineString(coords)
+    elif shape_type == "ellipse":
+        shape = Polygon(ellipse_to_polygon(coords))
+    else:
+        raise ValueError(f"Shape type `{shape_type}` not supported.")
+    if flipxy:
+        shape = flip_coords(shape)
+    return shape
 
 
 def get_points(coords: List) -> MultiPoint:
