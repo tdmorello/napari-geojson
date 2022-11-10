@@ -14,6 +14,6 @@ contributions:
       accepts_directories: true
   writers:
     - command: napari-geojson.write_shapes
-      layer_types: ["shapes"]
+      layer_types: ["shapes*", "points*"]
       filename_extensions: [".geojson"]
       display_name: napari geojson
